@@ -4,5 +4,5 @@
 	branch = main
 [submodule "userplugins-equicord"]
 	path = userplugins-equicord
-	url = https://github.com/BenjiThatFoxGuy/discord-plugins.git
+	url = https://github.com/o9-9/discord-plugins.git
 	branch = equicord
