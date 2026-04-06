@@ -12,8 +12,8 @@ on:
     workflow_dispatch: {}
 env:
     FORCE_COLOR: true
-    GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-    GH_TOKEN: ${{ secrets.GH_TOKEN }}
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     USERNAME: GitHub-Actions
 
 permissions: write-all
@@ -202,7 +202,7 @@ jobs:
                 files: equicord/dist/release/*
                 fail_on_unmatched_files: false
               env:
-                GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Fallback - Upload release artifact if GH release upload failed
               if: steps.upload_release.outcome == 'failure'
