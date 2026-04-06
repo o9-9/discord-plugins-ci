@@ -1,0 +1,73 @@
+concurrency:
+  group: equicord-submodules
+  cancel-in-progress: false
+
+name: Update Submodules
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/update-submodules.yml"
+
+jobs:
+  update-submodules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false # Don't fetch submodules yet
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Initialize and update submodules
+        run: |
+          # Sync submodule URLs
+          git submodule sync --recursive
+
+          # Try to update normally first
+          if ! git submodule update --init --recursive; then
+            echo "Standard submodule update failed, attempting recovery..."
+            
+            # Initialize submodules without checking out
+            git submodule init
+            
+            # For each submodule, fetch and checkout the default branch
+            git submodule foreach --recursive '
+              echo "Processing submodule: $name at $sm_path"
+              git fetch origin || exit 0
+              
+              # Try dev branch first (for equicord), then main, then master
+              if git checkout origin/dev 2>/dev/null; then
+                echo "Checked out dev branch"
+              elif git checkout origin/main 2>/dev/null; then
+                echo "Checked out main branch"
+              elif git checkout origin/master 2>/dev/null; then
+                echo "Checked out master branch"
+              else
+                echo "Warning: Could not checkout any default branch for $name"
+              fi
+            '
+          fi
+
+          # Update to latest on remote tracking branches
+          git submodule update --recursive --remote || true
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add .
+
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update submodule references [automated]"
+            git push
+          else
+            echo "No submodule updates."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
